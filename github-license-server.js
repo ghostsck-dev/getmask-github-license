@@ -7,10 +7,12 @@
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuração do GitHub
 const GITHUB_CONFIG = {
@@ -66,26 +68,13 @@ class GitHubLicenseManager {
         return {
             companies: [
                 {
-                    key: "1",
-                    name: "Wikitelecom",
-                    normalizedName: "WIKITELECOM",
-                    nagiosUrl: "172.16.14.178",
+                    key: "wikitelecom",
+                    company_name: "Wikitelecom",
+                    nagios_url: "172.16.14.178",
+                    license_type: "Corporativa",
                     expires: "2025-12-31",
-                    licenseType: "Licença Corporativa",
-                    contact: "Patrick Braga - Desenvolvedor",
-                    isActive: true,
-                    createdAt: "2025-01-01T00:00:00.000Z"
-                },
-                {
-                    key: "2",
-                    name: "Telecom ABC",
-                    normalizedName: "TELECOMABC",
-                    nagiosUrl: "192.168.1.100",
-                    expires: "2025-11-30",
-                    licenseType: "Licença Mensal",
-                    contact: "Patrick Braga - Desenvolvedor",
-                    isActive: true,
-                    createdAt: "2025-01-15T00:00:00.000Z"
+                    active: true,
+                    created_at: "2025-01-01T00:00:00.000Z"
                 }
             ]
         };
@@ -146,21 +135,42 @@ class GitHubLicenseManager {
         const licenses = await this.getLicenses();
         
         const newCompany = {
-            key: Date.now().toString(),
-            name: companyData.name,
-            normalizedName: companyData.name.toUpperCase().replace(/[^A-Z0-9]/g, ''),
-            nagiosUrl: companyData.nagiosUrl,
+            key: companyData.companyKey || Date.now().toString(),
+            company_name: companyData.companyName,
+            nagios_url: companyData.nagiosUrl,
+            license_type: companyData.licenseType || 'Corporativa',
             expires: companyData.expires,
-            licenseType: companyData.licenseType || 'Licença Corporativa',
-            contact: companyData.contact || 'Patrick Braga - Desenvolvedor',
-            isActive: true,
-            createdAt: new Date().toISOString()
+            active: companyData.active !== false,
+            created_at: new Date().toISOString()
         };
 
         licenses.companies.push(newCompany);
         await this.saveLicenses(licenses);
         
         return newCompany;
+    }
+
+    // Atualizar empresa
+    async updateCompany(key, companyData) {
+        const licenses = await this.getLicenses();
+        const companyIndex = licenses.companies.findIndex(c => c.key === key);
+        
+        if (companyIndex === -1) {
+            throw new Error('Empresa não encontrada');
+        }
+
+        licenses.companies[companyIndex] = {
+            ...licenses.companies[companyIndex],
+            company_name: companyData.companyName,
+            nagios_url: companyData.nagiosUrl,
+            license_type: companyData.licenseType,
+            expires: companyData.expires,
+            active: companyData.active,
+            updated_at: new Date().toISOString()
+        };
+
+        await this.saveLicenses(licenses);
+        return licenses.companies[companyIndex];
     }
 
     // Remover empresa
@@ -175,7 +185,6 @@ class GitHubLicenseManager {
     async validateLicense(companyName, nagiosUrl) {
         const licenses = await this.getLicenses();
         
-        const normalizedCompany = companyName.toUpperCase().replace(/[^A-Z0-9]/g, '');
         const normalizeNagiosUrl = (url) => {
             try {
                 const uri = new URL(url);
@@ -188,9 +197,9 @@ class GitHubLicenseManager {
         const normalizedNagiosUrl = normalizeNagiosUrl(nagiosUrl);
         
         const company = licenses.companies.find(
-            c => c.normalizedName === normalizedCompany && 
-                 (c.nagiosUrl === nagiosUrl || c.nagiosUrl === normalizedNagiosUrl) &&
-                 c.isActive
+            c => c.company_name.toLowerCase() === companyName.toLowerCase() && 
+                 (c.nagios_url === nagiosUrl || c.nagios_url === normalizedNagiosUrl) &&
+                 c.active
         );
 
         if (company) {
@@ -198,16 +207,18 @@ class GitHubLicenseManager {
             const isValid = expiresDate > new Date();
             
             return {
+                valid: isValid,
                 has_license: isValid,
-                company: company.name,
-                license_type: company.licenseType,
+                company: company.company_name,
+                license_type: company.license_type,
                 expires: company.expires,
-                message: isValid ? `Licença válida para ${company.name}` : `Licença expirada para ${company.name}`,
-                contact_info: company.contact
+                message: isValid ? `Licença válida para ${company.company_name}` : `Licença expirada para ${company.company_name}`,
+                contact_info: 'Entre em contato com Patrick Braga:\n📱 Instagram: @patricksck\n🐙 GitHub: ghostsck'
             };
         }
 
         return {
+            valid: false,
             has_license: false,
             company: companyName,
             message: 'Empresa não possui licença válida',
@@ -237,6 +248,15 @@ app.post('/api/companies', async (req, res) => {
     }
 });
 
+app.put('/api/companies/:key', async (req, res) => {
+    try {
+        const company = await licenseManager.updateCompany(req.params.key, req.body);
+        res.json({ message: 'Company updated successfully', company });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.delete('/api/companies/:key', async (req, res) => {
     try {
         await licenseManager.removeCompany(req.params.key);
@@ -258,58 +278,7 @@ app.post('/api/license/check', async (req, res) => {
 
 // Servir interface web
 app.get('/', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>GetMask License System</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-                .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                h1 { color: #333; }
-                .status { background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 20px 0; }
-                .warning { background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; }
-                .api-list { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
-                .endpoint { margin: 10px 0; font-family: monospace; }
-                .method { font-weight: bold; color: #007bff; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🎭 GetMask License System</h1>
-                <div class="status">
-                    <h3>✅ Servidor funcionando!</h3>
-                    <p>Modo: <strong>Produção</strong></p>
-                    <p>GitHub Token: <strong>${GITHUB_CONFIG.token ? '✅ Configurado' : '❌ Não configurado'}</strong></p>
-                </div>
-                
-                ${!GITHUB_CONFIG.token ? `
-                <div class="warning">
-                    <h3>⚠️ Configuração Necessária</h3>
-                    <p>Para persistência de dados, configure a variável de ambiente <code>GITHUB_TOKEN</code></p>
-                    <p>Sem o token, o sistema funciona com dados de teste em memória.</p>
-                </div>
-                ` : ''}
-                
-                <div class="api-list">
-                    <h3>🔌 Endpoints da API:</h3>
-                    <div class="endpoint"><span class="method">GET</span> /api/companies - Listar empresas</div>
-                    <div class="endpoint"><span class="method">POST</span> /api/companies - Adicionar empresa</div>
-                    <div class="endpoint"><span class="method">DELETE</span> /api/companies/:key - Remover empresa</div>
-                    <div class="endpoint"><span class="method">POST</span> /api/license/check - Validar licença</div>
-                </div>
-                
-                <h3>🧪 Teste rápido:</h3>
-                <p><a href="/api/companies" target="_blank">Ver empresas cadastradas</a></p>
-                <p><a href="/api/license/check" target="_blank">Testar validação de licença</a></p>
-                
-                <h3>📱 Integração GetMask:</h3>
-                <p>URL da API: <code>${req.protocol}://${req.get('host')}</code></p>
-                <p>Configure no GetMask app para usar esta URL.</p>
-            </div>
-        </body>
-        </html>
-    `);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GetMask License System - Gerenciamento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .status-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .status-item.success {
+            color: #28a745;
+        }
+
+        .status-item.error {
+            color: #dc3545;
+        }
+
+        .companies-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-company-card {
+            background: #e8f5e8;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .add-company-card h3 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+        }
+
+        .companies-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .company-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .company-card:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .company-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .company-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .company-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .company-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .company-status.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .company-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .company-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .company-detail label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .company-detail span {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .company-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .company-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .company-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 GetMask License System</h1>
+            <p>Sistema de Gerenciamento de Licenças</p>
+        </div>
+
+        <div class="content">
+            <!-- Status do Servidor -->
+            <div class="status-card">
+                <h3>📊 Status do Sistema</h3>
+                <div class="status-item success">
+                    <span>✅</span>
+                    <span>Servidor funcionando!</span>
+                </div>
+                <div class="status-item success">
+                    <span>🔑</span>
+                    <span>GitHub Token: Configurado</span>
+                </div>
+                <div class="status-item success">
+                    <span>🌐</span>
+                    <span>Modo: Produção</span>
+                </div>
+            </div>
+
+            <!-- Formulário para Adicionar Empresa -->
+            <div class="add-company-card">
+                <h3>➕ Adicionar Nova Empresa</h3>
+                <form id="addCompanyForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="companyKey">Chave da Empresa:</label>
+                            <input type="text" id="companyKey" name="companyKey" placeholder="ex: wikitelecom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyName">Nome da Empresa:</label>
+                            <input type="text" id="companyName" name="companyName" placeholder="ex: Wikitelecom Ltda" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nagiosUrl">URL do Nagios:</label>
+                            <input type="text" id="nagiosUrl" name="nagiosUrl" placeholder="ex: 172.16.14.178" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="licenseType">Tipo de Licença:</label>
+                            <select id="licenseType" name="licenseType" required>
+                                <option value="Corporativa">Corporativa</option>
+                                <option value="Profissional">Profissional</option>
+                                <option value="Básica">Básica</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expires">Data de Expiração:</label>
+                            <input type="date" id="expires" name="expires" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="active">Status:</label>
+                            <select id="active" name="active" required>
+                                <option value="true">Ativa</option>
+                                <option value="false">Inativa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        ➕ Adicionar Empresa
+                    </button>
+                </form>
+            </div>
+
+            <!-- Lista de Empresas -->
+            <div class="companies-section">
+                <h2 class="section-title">🏢 Empresas Cadastradas</h2>
+                <div id="companiesList" class="companies-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando empresas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Empresa -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Editar Empresa</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editCompanyForm">
+                <input type="hidden" id="editCompanyKey" name="companyKey">
+                <div class="form-group">
+                    <label for="editCompanyName">Nome da Empresa:</label>
+                    <input type="text" id="editCompanyName" name="companyName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editNagiosUrl">URL do Nagios:</label>
+                    <input type="text" id="editNagiosUrl" name="nagiosUrl" required>
+                </div>
+                <div class="form-group">
+                    <label for="editLicenseType">Tipo de Licença:</label>
+                    <select id="editLicenseType" name="licenseType" required>
+                        <option value="Corporativa">Corporativa</option>
+                        <option value="Profissional">Profissional</option>
+                        <option value="Básica">Básica</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editExpires">Data de Expiração:</label>
+                    <input type="date" id="editExpires" name="expires" required>
+                </div>
+                <div class="form-group">
+                    <label for="editActive">Status:</label>
+                    <select id="editActive" name="active" required>
+                        <option value="true">Ativa</option>
+                        <option value="false">Inativa</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let companies = [];
+
+        // Carregar empresas ao inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCompanies();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Formulário de adicionar empresa
+            document.getElementById('addCompanyForm').addEventListener('submit', addCompany);
+            
+            // Formulário de editar empresa
+            document.getElementById('editCompanyForm').addEventListener('submit', editCompany);
+            
+            // Fechar modal
+            document.querySelector('.close').addEventListener('click', closeModal);
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('editModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+
+        async function loadCompanies() {
+            try {
+                const response = await fetch(`${API_BASE}/api/companies`);
+                const data = await response.json();
+                companies = data.companies || [];
+                renderCompanies();
+            } catch (error) {
+                console.error('Erro ao carregar empresas:', error);
+                showAlert('Erro ao carregar empresas: ' + error.message, 'error');
+            }
+        }
+
+        function renderCompanies() {
+            const container = document.getElementById('companiesList');
+            
+            if (companies.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 Nenhuma empresa cadastrada</h3>
+                        <p>Adicione uma empresa usando o formulário acima.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = companies.map(company => `
+                <div class="company-card">
+                    <div class="company-header">
+                        <div class="company-name">${company.company_name}</div>
+                        <div class="company-status ${company.active ? 'active' : 'inactive'}">
+                            ${company.active ? 'Ativa' : 'Inativa'}
+                        </div>
+                    </div>
+                    <div class="company-details">
+                        <div class="company-detail">
+                            <label>Chave:</label>
+                            <span>${company.key}</span>
+                        </div>
+                        <div class="company-detail">
+                            <label>Nagios URL:</label>
+                            <span>${company.nagios_url}</span>
+                        </div>
+                        <div class="company-detail">
+                            <label>Tipo de Licença:</label>
+                            <span>${company.license_type}</span>
+                        </div>
+                        <div class="company-detail">
+                            <label>Expira em:</label>
+                            <span>${company.expires}</span>
+                        </div>
+                    </div>
+                    <div class="company-actions">
+                        <button class="btn btn-warning" onclick="openEditModal('${company.key}')">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteCompany('${company.key}')">
+                            🗑️ Remover
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function addCompany(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const companyData = {
+                companyKey: formData.get('companyKey'),
+                companyName: formData.get('companyName'),
+                nagiosUrl: formData.get('nagiosUrl'),
+                licenseType: formData.get('licenseType'),
+                expires: formData.get('expires'),
+                active: formData.get('active') === 'true'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/companies`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(companyData)
+                });
+
+                if (response.ok) {
+                    showAlert('Empresa adicionada com sucesso!', 'success');
+                    event.target.reset();
+                    loadCompanies();
+                } else {
+                    const error = await response.text();
+                    showAlert('Erro ao adicionar empresa: ' + error, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar empresa:', error);
+                showAlert('Erro ao adicionar empresa: ' + error.message, 'error');
+            }
+        }
+
+        function openEditModal(companyKey) {
+            const company = companies.find(c => c.key === companyKey);
+            if (!company) return;
+
+            document.getElementById('editCompanyKey').value = company.key;
+            document.getElementById('editCompanyName').value = company.company_name;
+            document.getElementById('editNagiosUrl').value = company.nagios_url;
+            document.getElementById('editLicenseType').value = company.license_type;
+            document.getElementById('editExpires').value = company.expires;
+            document.getElementById('editActive').value = company.active.toString();
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        async function editCompany(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const companyKey = formData.get('companyKey');
+            const companyData = {
+                companyName: formData.get('companyName'),
+                nagiosUrl: formData.get('nagiosUrl'),
+                licenseType: formData.get('licenseType'),
+                expires: formData.get('expires'),
+                active: formData.get('active') === 'true'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/companies/${companyKey}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(companyData)
+                });
+
+                if (response.ok) {
+                    showAlert('Empresa atualizada com sucesso!', 'success');
+                    closeModal();
+                    loadCompanies();
+                } else {
+                    const error = await response.text();
+                    showAlert('Erro ao atualizar empresa: ' + error, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar empresa:', error);
+                showAlert('Erro ao atualizar empresa: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteCompany(companyKey) {
+            if (!confirm('Tem certeza que deseja remover esta empresa?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/companies/${companyKey}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showAlert('Empresa removida com sucesso!', 'success');
+                    loadCompanies();
+                } else {
+                    const error = await response.text();
+                    showAlert('Erro ao remover empresa: ' + error, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao remover empresa:', error);
+                showAlert('Erro ao remover empresa: ' + error.message, 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <span>${type === 'success' ? '✅' : '❌'}</span>
+                <span>${message}</span>
+            `;
+            
+            const content = document.querySelector('.content');
+            content.insertBefore(alertDiv, content.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
