@@ -1,0 +1,9 @@
+# Render.com Configuration
+# Build Command: npm install
+# Start Command: npm start
+# Environment: Node
+# Node Version: 18
+
+# Environment Variables Required:
+# GITHUB_TOKEN - GitHub Personal Access Token
+# PORT - Server port (automatically set by Render)

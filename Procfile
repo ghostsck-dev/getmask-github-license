@@ -1,0 +1,1 @@
+web: node github-license-server.js

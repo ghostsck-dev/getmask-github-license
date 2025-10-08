@@ -1,0 +1,41 @@
+{
+  "companies": {
+    "WIKITELECOM": {
+      "has_license": true,
+      "license_type": "Licença Mensal",
+      "expires": "2025-12-31",
+      "nagios_urls": ["172.16.14.178", "wikitelecom.com"],
+      "contact": "Patrick Braga - Desenvolvedor",
+      "renewal": "mensal"
+    },
+    "EMPRESA_EXEMPLO": {
+      "has_license": true,
+      "license_type": "Licença Mensal",
+      "expires": "2025-06-30",
+      "nagios_urls": ["192.168.1.100"],
+      "contact": "Patrick Braga - Desenvolvedor",
+      "renewal": "mensal"
+    },
+    "EMPRESA_DESCONHECIDA": {
+      "has_license": true,
+      "license_type": "Licença Mensal",
+      "expires": "2025-12-31",
+      "nagios_urls": ["172.16.14.178"],
+      "contact": "Patrick Braga - Desenvolvedor",
+      "renewal": "mensal"
+    },
+    "WIKITELECOMNAGIOSBANDALARGA": {
+      "has_license": true,
+      "license_type": "Licença Corporativa",
+      "expires": "2026-01-06",
+      "nagios_urls": ["172.16.14.178"],
+      "contact": "Patrick Braga - Desenvolvedor",
+      "renewal": "mensal"
+    }
+  },
+  "last_updated": "2025-10-07T18:00:00Z",
+  "version": "1.0.0",
+  "total_companies": 4,
+  "active_licenses": 4,
+  "expired_licenses": 0
+}
