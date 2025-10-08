@@ -7,3 +7,10 @@
 # Environment Variables Required:
 # GITHUB_TOKEN - GitHub Personal Access Token
 # PORT - Server port (automatically set by Render)
+
+# Render will automatically:
+# - Install dependencies with npm install
+# - Start the server with npm start
+# - Provide HTTPS SSL certificate
+# - Set PORT environment variable
+# - Enable auto-deploy from GitHub

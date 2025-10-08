@@ -1,7 +1,7 @@
 {
   "name": "getmask-github-license",
   "version": "1.0.0",
-  "description": "GetMask License System using GitHub API",
+  "description": "GetMask License System using GitHub API - Deployed on Render.com",
   "main": "github-license-server.js",
   "scripts": {
     "start": "node github-license-server.js",
@@ -21,7 +21,7 @@
     "license",
     "github",
     "api",
-    "railway"
+    "render"
   ],
   "author": "Patrick Braga <patrickgold02@outlook.com>",
   "license": "MIT",
@@ -29,5 +29,5 @@
     "type": "git",
     "url": "https://github.com/ghostsck-dev/getmask-github-license.git"
   },
-  "homepage": "https://getmask-github-license.railway.app"
+  "homepage": "https://getmask-github-license.onrender.com"
 }
