@@ -33,14 +33,16 @@ class GitHubLicenseManager {
             'Accept': 'application/vnd.github.v3+json',
             'User-Agent': 'GetMask-License-Manager'
         };
+        // Armazenamento temporário em memória quando GitHub não está disponível
+        this.tempStorage = { companies: [] };
     }
 
     // Buscar licenças do GitHub
     async getLicenses() {
         try {
             if (!GITHUB_CONFIG.token) {
-                console.log('⚠️ GitHub token não configurado, usando dados de teste');
-                return this.getTestData();
+                console.log('⚠️ GitHub token não configurado, usando armazenamento temporário');
+                return this.tempStorage;
             }
 
             const response = await fetch(`${this.baseUrl}/contents/${LICENSES_FILE}`, {
@@ -59,7 +61,8 @@ class GitHubLicenseManager {
             }
         } catch (error) {
             console.error('❌ Erro ao buscar licenças:', error.message);
-            return this.getTestData();
+            console.log('🔄 Usando armazenamento temporário');
+            return this.tempStorage;
         }
     }
 
@@ -84,7 +87,8 @@ class GitHubLicenseManager {
     async saveLicenses(licenses) {
         try {
             if (!GITHUB_CONFIG.token) {
-                console.log('⚠️ GitHub token não configurado, dados não persistidos');
+                console.log('⚠️ GitHub token não configurado, salvando em armazenamento temporário');
+                this.tempStorage = licenses;
                 return true;
             }
 
