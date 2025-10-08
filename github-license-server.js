@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Configuração do GitHub
 const GITHUB_CONFIG = {
     owner: 'ghostsck-dev',
-    repo: 'getmask-licenses',
+    repo: 'getmask-github-license',
     token: process.env.GITHUB_TOKEN || '',
     branch: 'main'
 };
