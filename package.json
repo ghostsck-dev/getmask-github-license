@@ -4,7 +4,7 @@
   "description": "GetMask License System using GitHub API - Deployed on Render.com",
   "main": "github-license-server.js",
   "scripts": {
-    "start": "node github-license-server.js",
+    "start": "node secure-license-server.js",
     "dev": "node github-license-server.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
