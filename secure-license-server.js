@@ -32,6 +32,8 @@ class SecureLicenseManager {
 
     // Adicionar empresa
     async addCompany(companyData) {
+        console.log('📝 Dados recebidos:', companyData);
+        
         const newCompany = {
             key: companyData.companyKey || Date.now().toString(),
             company_name: companyData.companyName,
@@ -42,6 +44,7 @@ class SecureLicenseManager {
             created_at: new Date().toISOString()
         };
 
+        console.log('✅ Empresa criada:', newCompany);
         this.licenses.companies.push(newCompany);
         return newCompany;
     }
@@ -71,6 +74,50 @@ class SecureLicenseManager {
     async removeCompany(key) {
         this.licenses.companies = this.licenses.companies.filter(c => c.key !== key);
         return true;
+    }
+
+    // Validar licença por chave da empresa
+    async validateLicenseByKey(companyKey, nagiosUrl) {
+        const normalizeNagiosUrl = (url) => {
+            try {
+                const uri = new URL(url);
+                return uri.hostname;
+            } catch {
+                return url.replace(/^https?:\/\//, '').split('/')[0];
+            }
+        };
+        
+        const normalizedNagiosUrl = normalizeNagiosUrl(nagiosUrl);
+        
+        const company = this.licenses.companies.find(
+            c => c.key.toLowerCase() === companyKey.toLowerCase() && 
+                 (c.nagios_url === nagiosUrl || c.nagios_url === normalizedNagiosUrl) &&
+                 c.active
+        );
+
+        if (company) {
+            const expiresDate = new Date(company.expires);
+            const isValid = expiresDate > new Date();
+            
+            return {
+                valid: isValid,
+                has_license: isValid,
+                company: company.company_name,
+                company_key: company.key,
+                license_type: company.license_type,
+                expires: company.expires,
+                message: isValid ? `Licença válida para ${company.company_name}` : `Licença expirada para ${company.company_name}`,
+                contact_info: 'Entre em contato com Patrick Braga:\n📱 Instagram: @patricksck\n🐙 GitHub: ghostsck'
+            };
+        }
+
+        return {
+            valid: false,
+            has_license: false,
+            company_key: companyKey,
+            message: 'Chave da empresa não possui licença válida',
+            contact_info: 'Entre em contato com Patrick Braga:\n📱 Instagram: @patricksck\n🐙 GitHub: ghostsck'
+        };
     }
 
     // Validar licença
@@ -156,10 +203,10 @@ app.delete('/api/companies/:key', async (req, res) => {
     }
 });
 
-app.post('/api/license/check', async (req, res) => {
+app.post('/api/license/check-by-key', async (req, res) => {
     try {
-        const { company, nagios_url } = req.body;
-        const result = await licenseManager.validateLicense(company, nagios_url);
+        const { company_key, nagios_url } = req.body;
+        const result = await licenseManager.validateLicenseByKey(company_key, nagios_url);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
