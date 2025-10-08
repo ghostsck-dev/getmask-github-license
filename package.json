@@ -5,6 +5,7 @@
   "main": "github-license-server.js",
   "scripts": {
     "start": "node github-license-server.js",
+    "dev": "node github-license-server.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
@@ -20,7 +21,7 @@
     "license",
     "github",
     "api",
-    "heroku"
+    "railway"
   ],
   "author": "Patrick Braga <patrickgold02@outlook.com>",
   "license": "MIT",
@@ -28,5 +29,5 @@
     "type": "git",
     "url": "https://github.com/ghostsck-dev/getmask-github-license.git"
   },
-  "homepage": "https://getmask-github-license.herokuapp.com"
+  "homepage": "https://getmask-github-license.railway.app"
 }
