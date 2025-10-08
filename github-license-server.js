@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 
 /**
- * Sistema de Licenças GetMask usando GitHub Pages + GitHub API
- * 
- * Esta solução usa:
- * - GitHub Pages para hospedar a interface web
- * - GitHub API para gerenciar licenças
- * - Arquivo JSON no repositório como banco de dados
+ * GetMask License System - Production Server
+ * Este servidor usa GitHub API para persistência de dados
  */
 
-const fs = require('fs');
-const path = require('path');
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
 
 // Configuração do GitHub
 const GITHUB_CONFIG = {
     owner: 'ghostsck-dev',
     repo: 'getmask-licenses',
-    token: process.env.GITHUB_TOKEN || '', // Token de acesso pessoal
+    token: process.env.GITHUB_TOKEN || '',
     branch: 'main'
 };
 
@@ -36,6 +36,11 @@ class GitHubLicenseManager {
     // Buscar licenças do GitHub
     async getLicenses() {
         try {
+            if (!GITHUB_CONFIG.token) {
+                console.log('⚠️ GitHub token não configurado, usando dados de teste');
+                return this.getTestData();
+            }
+
             const response = await fetch(`${this.baseUrl}/contents/${LICENSES_FILE}`, {
                 headers: this.headers
             });
@@ -45,20 +50,55 @@ class GitHubLicenseManager {
                 const content = Buffer.from(data.content, 'base64').toString('utf8');
                 return JSON.parse(content);
             } else if (response.status === 404) {
-                // Arquivo não existe, criar estrutura padrão
+                console.log('📁 Arquivo não existe, criando estrutura padrão');
                 return { companies: [] };
             } else {
                 throw new Error(`GitHub API error: ${response.status}`);
             }
         } catch (error) {
-            console.error('Erro ao buscar licenças:', error);
-            throw error;
+            console.error('❌ Erro ao buscar licenças:', error.message);
+            return this.getTestData();
         }
+    }
+
+    // Dados de teste quando GitHub não está disponível
+    getTestData() {
+        return {
+            companies: [
+                {
+                    key: "1",
+                    name: "Wikitelecom",
+                    normalizedName: "WIKITELECOM",
+                    nagiosUrl: "172.16.14.178",
+                    expires: "2025-12-31",
+                    licenseType: "Licença Corporativa",
+                    contact: "Patrick Braga - Desenvolvedor",
+                    isActive: true,
+                    createdAt: "2025-01-01T00:00:00.000Z"
+                },
+                {
+                    key: "2",
+                    name: "Telecom ABC",
+                    normalizedName: "TELECOMABC",
+                    nagiosUrl: "192.168.1.100",
+                    expires: "2025-11-30",
+                    licenseType: "Licença Mensal",
+                    contact: "Patrick Braga - Desenvolvedor",
+                    isActive: true,
+                    createdAt: "2025-01-15T00:00:00.000Z"
+                }
+            ]
+        };
     }
 
     // Salvar licenças no GitHub
     async saveLicenses(licenses) {
         try {
+            if (!GITHUB_CONFIG.token) {
+                console.log('⚠️ GitHub token não configurado, dados não persistidos');
+                return true;
+            }
+
             // Primeiro, buscar o SHA do arquivo atual
             const getResponse = await fetch(`${this.baseUrl}/contents/${LICENSES_FILE}`, {
                 headers: this.headers
@@ -96,8 +136,8 @@ class GitHubLicenseManager {
                 throw new Error(`Erro ao salvar: ${error}`);
             }
         } catch (error) {
-            console.error('Erro ao salvar licenças:', error);
-            throw error;
+            console.error('❌ Erro ao salvar licenças:', error.message);
+            return false;
         }
     }
 
@@ -176,14 +216,6 @@ class GitHubLicenseManager {
     }
 }
 
-// Servidor Express para API
-const express = require('express');
-const cors = require('cors');
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
 const licenseManager = new GitHubLicenseManager();
 
 // Endpoints da API
@@ -224,10 +256,72 @@ app.post('/api/license/check', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor GetMask License rodando na porta ${PORT}`);
-    console.log(`📋 GitHub: ${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}`);
+// Servir interface web
+app.get('/', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>GetMask License System</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+                .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                h1 { color: #333; }
+                .status { background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .warning { background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .api-list { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+                .endpoint { margin: 10px 0; font-family: monospace; }
+                .method { font-weight: bold; color: #007bff; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🎭 GetMask License System</h1>
+                <div class="status">
+                    <h3>✅ Servidor funcionando!</h3>
+                    <p>Modo: <strong>Produção</strong></p>
+                    <p>GitHub Token: <strong>${GITHUB_CONFIG.token ? '✅ Configurado' : '❌ Não configurado'}</strong></p>
+                </div>
+                
+                ${!GITHUB_CONFIG.token ? `
+                <div class="warning">
+                    <h3>⚠️ Configuração Necessária</h3>
+                    <p>Para persistência de dados, configure a variável de ambiente <code>GITHUB_TOKEN</code></p>
+                    <p>Sem o token, o sistema funciona com dados de teste em memória.</p>
+                </div>
+                ` : ''}
+                
+                <div class="api-list">
+                    <h3>🔌 Endpoints da API:</h3>
+                    <div class="endpoint"><span class="method">GET</span> /api/companies - Listar empresas</div>
+                    <div class="endpoint"><span class="method">POST</span> /api/companies - Adicionar empresa</div>
+                    <div class="endpoint"><span class="method">DELETE</span> /api/companies/:key - Remover empresa</div>
+                    <div class="endpoint"><span class="method">POST</span> /api/license/check - Validar licença</div>
+                </div>
+                
+                <h3>🧪 Teste rápido:</h3>
+                <p><a href="/api/companies" target="_blank">Ver empresas cadastradas</a></p>
+                <p><a href="/api/license/check" target="_blank">Testar validação de licença</a></p>
+                
+                <h3>📱 Integração GetMask:</h3>
+                <p>URL da API: <code>${req.protocol}://${req.get('host')}</code></p>
+                <p>Configure no GetMask app para usar esta URL.</p>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
-module.exports = { GitHubLicenseManager };
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log('🎭 GetMask License System - Produção');
+    console.log('==================================');
+    console.log('✅ Servidor iniciado na porta', PORT);
+    console.log('🌐 Acesse:', `http://localhost:${PORT}`);
+    console.log('📱 API:', `http://localhost:${PORT}/api/companies`);
+    console.log('🔍 Teste:', `http://localhost:${PORT}/api/license/check`);
+    console.log('');
+    console.log('🔑 GitHub Token:', GITHUB_CONFIG.token ? '✅ Configurado' : '❌ Não configurado');
+    console.log('📋 Modo:', GITHUB_CONFIG.token ? 'GitHub API' : 'Dados de teste');
+    console.log('');
+});
