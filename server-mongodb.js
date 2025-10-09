@@ -57,8 +57,9 @@ const ipWhitelist = (req, res, next) => {
     }
 };
 
-// Aplicar controle de IP em todas as rotas exceto status
-app.use(ipWhitelist);
+// ⚠️ IMPORTANTE: Controle de IP APENAS para rotas administrativas
+// As APIs de licença ficam LIVRES para todos os clientes/Nagios
+// app.use(ipWhitelist); // REMOVIDO - não aplicar globalmente
 
 // Configuração do MongoDB Atlas - ÚNICA FONTE DE DADOS
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ghostsck:1502%40Ghost0@clustermsk.rz7l7ke.mongodb.net/getmask-licenses?retryWrites=true&w=majority&appName=ClusterMsk';
@@ -163,10 +164,12 @@ const insertInitialData = async () => {
     }
 };
 
-// Endpoints da API
+// 🔓 APIs DE LICENÇA - LIVRES para todos os clientes/Nagios
+// Estas rotas NÃO têm controle de IP - qualquer cliente pode acessar
 
 // Listar todas as empresas
-app.get('/api/companies', async (req, res) => {
+// 🔒 ROTAS ADMINISTRATIVAS - Controle de IP obrigatório
+app.get('/api/companies', ipWhitelist, async (req, res) => {
     try {
         const companies = await Company.find().sort({ created_at: -1 });
         const total = await Company.countDocuments();
@@ -195,7 +198,7 @@ app.get('/api/companies', async (req, res) => {
 });
 
 // Adicionar nova empresa
-app.post('/api/companies', async (req, res) => {
+app.post('/api/companies', ipWhitelist, async (req, res) => {
     try {
         const { companyKey, companyName, nagiosUrl, licenseType, expires, active } = req.body;
         
@@ -237,7 +240,7 @@ app.post('/api/companies', async (req, res) => {
 });
 
 // Atualizar empresa
-app.put('/api/companies/:key', async (req, res) => {
+app.put('/api/companies/:key', ipWhitelist, async (req, res) => {
     try {
         const { key } = req.params;
         const updates = req.body;
@@ -268,7 +271,7 @@ app.put('/api/companies/:key', async (req, res) => {
 });
 
 // Remover empresa
-app.delete('/api/companies/:key', async (req, res) => {
+app.delete('/api/companies/:key', ipWhitelist, async (req, res) => {
     try {
         const { key } = req.params;
         
@@ -288,6 +291,7 @@ app.delete('/api/companies/:key', async (req, res) => {
 });
 
 // Validação de licença para GetMask
+// 🔓 API DE VALIDAÇÃO DE LICENÇA - LIVRE para todos os clientes/Nagios
 app.post('/api/license/check', async (req, res) => {
     try {
         const { company, nagios_url } = req.body;
@@ -345,7 +349,7 @@ app.post('/api/license/check', async (req, res) => {
 });
 
 // 🔒 Rota para gerenciar IPs autorizados (apenas para admin)
-app.post('/api/admin/whitelist', (req, res) => {
+app.post('/api/admin/whitelist', ipWhitelist, (req, res) => {
     const { action, ip, admin_key } = req.body;
     
     // Chave de administrador (mude para algo mais seguro)
@@ -380,6 +384,7 @@ app.post('/api/admin/whitelist', (req, res) => {
 });
 
 // Status do sistema (sem controle de IP para verificar conectividade)
+// 🔓 API DE STATUS - LIVRE para todos os clientes/Nagios
 app.get('/api/status', async (req, res) => {
     try {
         const total = await Company.countDocuments();
