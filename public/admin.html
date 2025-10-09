@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 GetMask Admin - Sistema de Licenças</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .admin-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 10px;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .companies-list {
+            margin-top: 2rem;
+        }
+
+        .company-card {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .company-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .company-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .company-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .detail-item {
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎭 GetMask Admin</h1>
+        <div class="user-info">
+            <span id="userInfo">👤 Admin</span>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Estatísticas -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCompanies">-</div>
+                <div class="stat-label">Total de Empresas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeLicenses">-</div>
+                <div class="stat-label">Licenças Ativas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="expiredLicenses">-</div>
+                <div class="stat-label">Licenças Expiradas</div>
+            </div>
+        </div>
+
+        <!-- Adicionar Empresa -->
+        <div class="admin-section">
+            <h2 class="section-title">➕ Adicionar Nova Empresa</h2>
+            <form id="addCompanyForm">
+                <div class="form-group">
+                    <label for="companyKey">Chave da Empresa:</label>
+                    <input type="text" id="companyKey" name="companyKey" required placeholder="ex: company123">
+                </div>
+                <div class="form-group">
+                    <label for="companyName">Nome da Empresa:</label>
+                    <input type="text" id="companyName" name="companyName" required placeholder="ex: Empresa ABC">
+                </div>
+                <div class="form-group">
+                    <label for="nagiosUrl">URL do Nagios:</label>
+                    <input type="text" id="nagiosUrl" name="nagiosUrl" required placeholder="ex: 192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label for="licenseType">Tipo de Licença:</label>
+                    <select id="licenseType" name="licenseType" required>
+                        <option value="Corporativa">Corporativa</option>
+                        <option value="Profissional">Profissional</option>
+                        <option value="Básica">Básica</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expires">Data de Expiração:</label>
+                    <input type="date" id="expires" name="expires" required>
+                </div>
+                <div class="form-group">
+                    <label for="active">Status:</label>
+                    <select id="active" name="active" required>
+                        <option value="true">Ativa</option>
+                        <option value="false">Inativa</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">➕ Adicionar Empresa</button>
+            </form>
+        </div>
+
+        <!-- Lista de Empresas -->
+        <div class="admin-section">
+            <h2 class="section-title">🏢 Empresas Cadastradas</h2>
+            <div id="companiesList" class="companies-list">
+                <div class="loading">Carregando empresas...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar autenticação
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Configurar headers para requisições autenticadas
+        const authHeaders = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        // Carregar dados iniciais
+        loadStats();
+        loadCompanies();
+
+        // Carregar estatísticas
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/status', {
+                    headers: authHeaders
+                });
+                const data = await response.json();
+                
+                document.getElementById('totalCompanies').textContent = data.total_companies || 0;
+                document.getElementById('activeLicenses').textContent = data.active_licenses || 0;
+                document.getElementById('expiredLicenses').textContent = data.expired_licenses || 0;
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // Carregar empresas
+        async function loadCompanies() {
+            try {
+                const response = await fetch('/api/companies', {
+                    headers: authHeaders
+                });
+                
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
+                
+                const data = await response.json();
+                displayCompanies(data.companies || []);
+            } catch (error) {
+                document.getElementById('companiesList').innerHTML = 
+                    '<div class="error">❌ Erro ao carregar empresas</div>';
+            }
+        }
+
+        // Exibir empresas
+        function displayCompanies(companies) {
+            const container = document.getElementById('companiesList');
+            
+            if (companies.length === 0) {
+                container.innerHTML = '<div class="error">📭 Nenhuma empresa cadastrada</div>';
+                return;
+            }
+
+            container.innerHTML = companies.map(company => `
+                <div class="company-card">
+                    <div class="company-header">
+                        <div class="company-name">${company.company_name}</div>
+                        <div class="company-status ${company.active ? 'status-active' : 'status-inactive'}">
+                            ${company.active ? '✅ Ativa' : '❌ Inativa'}
+                        </div>
+                    </div>
+                    <div class="company-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Chave:</div>
+                            <div>${company.key}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Nagios URL:</div>
+                            <div>${company.nagios_url}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tipo:</div>
+                            <div>${company.license_type}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Expira em:</div>
+                            <div>${company.expires}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="editCompany('${company.key}')">✏️ Editar</button>
+                        <button class="btn btn-danger" onclick="deleteCompany('${company.key}')">🗑️ Remover</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Adicionar empresa
+        document.getElementById('addCompanyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const companyData = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/companies', {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify(companyData)
+                });
+                
+                if (response.ok) {
+                    showMessage('✅ Empresa adicionada com sucesso!', 'success');
+                    e.target.reset();
+                    loadStats();
+                    loadCompanies();
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erro ao adicionar empresa', 'error');
+            }
+        });
+
+        // Editar empresa
+        function editCompany(key) {
+            showMessage('✏️ Funcionalidade de edição em desenvolvimento', 'info');
+        }
+
+        // Remover empresa
+        async function deleteCompany(key) {
+            if (!confirm('Tem certeza que deseja remover esta empresa?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/companies/${key}`, {
+                    method: 'DELETE',
+                    headers: authHeaders
+                });
+                
+                if (response.ok) {
+                    showMessage('✅ Empresa removida com sucesso!', 'success');
+                    loadStats();
+                    loadCompanies();
+                } else {
+                    showMessage('❌ Erro ao remover empresa', 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erro ao remover empresa', 'error');
+            }
+        }
+
+        // Mostrar mensagem
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            window.location.href = '/login';
+        }
+
+        // Atualizar informações do usuário
+        const user = localStorage.getItem('adminUser');
+        if (user) {
+            document.getElementById('userInfo').textContent = `👤 ${user}`;
+        }
+    </script>
+</body>
+</html>

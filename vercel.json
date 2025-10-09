@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "mongodb+srv://ghostsck:1502%40Ghost0@clustermsk.rz7l7ke.mongodb.net/getmask-licenses?retryWrites=true&w=majority&appName=ClusterMsk",
+    "ADMIN_KEY": "getmask-admin-2025",
+    "ADMIN_USERNAME": "admin",
+    "ADMIN_PASSWORD": "getmask2025",
+    "JWT_SECRET": "getmask-admin-secret-2025",
+    "NODE_ENV": "production"
+  }
+}

@@ -9,6 +9,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 
@@ -17,9 +19,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔒 CONTROLE DE ACESSO POR IP - SEGURANÇA
+// 🔒 CONTROLE DE ACESSO POR IP - SEGURANÇA by bragasec@protonmail.com
 const ALLOWED_IPS = [
-    '45.181.228.226/32',   // IP autorizado do usuário
+    '10.9.60.102/22',      // IP autorizado do usuário (atualizado)
     '127.0.0.1',           // Localhost IPv4
     '::1',                 // Localhost IPv6
     '::ffff:127.0.0.1',    // IPv4 mapped IPv6
@@ -57,6 +59,23 @@ const ipWhitelist = (req, res, next) => {
             your_ip: clientIP,
             contact: 'Entre em contato com o administrador para solicitar acesso'
         });
+    }
+};
+
+// 🔐 MIDDLEWARE DE AUTENTICAÇÃO ADMIN
+const authenticateAdmin = (req, res, next) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Token de acesso necessário' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'getmask-admin-secret-2025');
+        req.admin = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: 'Token inválido' });
     }
 };
 
@@ -167,12 +186,52 @@ const insertInitialData = async () => {
     }
 };
 
+// 🔐 ROTAS DE AUTENTICAÇÃO ADMIN
+app.post('/api/admin/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // Credenciais padrão (em produção, usar banco de dados)
+        const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'getmask2025';
+        
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            const token = jwt.sign(
+                { username, role: 'admin' },
+                process.env.JWT_SECRET || 'getmask-admin-secret-2025',
+                { expiresIn: '24h' }
+            );
+            
+            res.json({
+                success: true,
+                token,
+                user: username,
+                message: 'Login realizado com sucesso'
+            });
+        } else {
+            res.status(401).json({ error: 'Credenciais inválidas' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para página de login
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Rota para página admin
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 // 🔓 APIs DE LICENÇA - LIVRES para todos os clientes/Nagios
 // Estas rotas NÃO têm controle de IP - qualquer cliente pode acessar
 
 // Listar todas as empresas
-// 🔒 ROTAS ADMINISTRATIVAS - Controle de IP obrigatório
-app.get('/api/companies', ipWhitelist, async (req, res) => {
+// 🔒 ROTAS ADMINISTRATIVAS - Autenticação obrigatória
+app.get('/api/companies', authenticateAdmin, async (req, res) => {
     try {
         const companies = await Company.find().sort({ created_at: -1 });
         const total = await Company.countDocuments();
@@ -201,7 +260,7 @@ app.get('/api/companies', ipWhitelist, async (req, res) => {
 });
 
 // Adicionar nova empresa
-app.post('/api/companies', ipWhitelist, async (req, res) => {
+app.post('/api/companies', authenticateAdmin, async (req, res) => {
     try {
         const { companyKey, companyName, nagiosUrl, licenseType, expires, active } = req.body;
         
@@ -243,7 +302,7 @@ app.post('/api/companies', ipWhitelist, async (req, res) => {
 });
 
 // Atualizar empresa
-app.put('/api/companies/:key', ipWhitelist, async (req, res) => {
+app.put('/api/companies/:key', authenticateAdmin, async (req, res) => {
     try {
         const { key } = req.params;
         const updates = req.body;
@@ -274,7 +333,7 @@ app.put('/api/companies/:key', ipWhitelist, async (req, res) => {
 });
 
 // Remover empresa
-app.delete('/api/companies/:key', ipWhitelist, async (req, res) => {
+app.delete('/api/companies/:key', authenticateAdmin, async (req, res) => {
     try {
         const { key } = req.params;
         
@@ -423,23 +482,27 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Iniciar servidor
+// Iniciar servidor - Compatível com Vercel
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
     await connectDB();
     
     app.listen(PORT, () => {
-        console.log('🚀 Servidor GetMask - MongoDB Atlas Only!');
+        console.log('🚀 Servidor GetMask - MongoDB Atlas + Vercel!');
         console.log(`🌐 Porta: ${PORT}`);
         console.log(`🍃 Banco: MongoDB Atlas (100% Cloud)`);
-        console.log(`☁️ Armazenamento: Apenas na nuvem`);
+        console.log(`☁️ Deploy: Vercel`);
         console.log(`📱 Acesse: http://localhost:${PORT}`);
         console.log(`🔗 API: http://localhost:${PORT}/api/companies`);
         console.log(`🛡️ Backup: Automático no Atlas`);
     });
 };
 
-startServer().catch(console.error);
-
+// Exportar para Vercel
 module.exports = app;
+
+// Iniciar servidor apenas se não estiver no Vercel
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    startServer().catch(console.error);
+}
