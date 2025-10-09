@@ -14,9 +14,69 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuração simples e segura
+// Configuração com dados consolidados
 const LICENSES_DATA = {
-    companies: []
+    companies: [
+        {
+            key: "1720646400000",
+            company_name: "WIKITELECOM",
+            nagios_url: "172.16.14.178",
+            license_type: "Licença Mensal",
+            expires: "2025-12-31",
+            active: true,
+            created_at: "2025-07-10T12:00:00.000Z"
+        },
+        {
+            key: "1720646400001",
+            company_name: "EMPRESA_EXEMPLO",
+            nagios_url: "192.168.1.100",
+            license_type: "Licença Mensal",
+            expires: "2025-06-30",
+            active: true,
+            created_at: "2025-07-10T12:00:00.000Z"
+        },
+        {
+            key: "1720646400002",
+            company_name: "EMPRESA_DESCONHECIDA",
+            nagios_url: "172.16.14.178",
+            license_type: "Licença Mensal",
+            expires: "2025-12-31",
+            active: true,
+            created_at: "2025-07-10T12:00:00.000Z"
+        },
+        {
+            key: "1720646400003",
+            company_name: "Wiki Telecom - Nagios Banda Larga",
+            nagios_url: "172.16.14.178",
+            license_type: "Licença Corporativa",
+            expires: "2026-01-06",
+            active: true,
+            created_at: "2025-07-10T12:00:00.000Z"
+        },
+        {
+            key: "2",
+            company_name: "Telecom ABC",
+            nagios_url: "192.168.1.100",
+            license_type: "Licença Mensal",
+            expires: "2025-11-30",
+            active: true,
+            created_at: "2025-01-15T00:00:00.000Z"
+        }
+    ],
+    metadata: {
+        last_updated: "2025-10-09T13:13:30.858Z",
+        version: "2.0.0",
+        total_companies: 5,
+        active_licenses: 5,
+        expired_licenses: 1,
+        consolidated_from: [
+            "public/licenses.json",
+            "getmask-licenses/api/licenses.json",
+            "public/licenses-github.json",
+            "public/github-pages-licenses.json"
+        ],
+        migration_date: "2025-10-09T13:13:30.858Z"
+    }
 };
 
 // Sistema de licenças simplificado e seguro

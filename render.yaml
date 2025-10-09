@@ -1,11 +1,11 @@
-# Render.com Configuration
+# Render.com Configuration with MongoDB Atlas
 # Build Command: npm install
 # Start Command: npm start
 # Environment: Node
 # Node Version: 18
 
 # Environment Variables Required:
-# GITHUB_TOKEN - GitHub Personal Access Token
+# MONGODB_URI - MongoDB Atlas connection string
 # PORT - Server port (automatically set by Render)
 
 # Render will automatically:
@@ -14,3 +14,10 @@
 # - Provide HTTPS SSL certificate
 # - Set PORT environment variable
 # - Enable auto-deploy from GitHub
+# - Connect to MongoDB Atlas for data persistence
+
+# MongoDB Atlas Features:
+# - Real-time data persistence
+# - Automatic backups
+# - Scalable cloud database
+# - No data loss on server restart
