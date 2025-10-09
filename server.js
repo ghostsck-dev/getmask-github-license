@@ -20,6 +20,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 🔒 CONTROLE DE ACESSO POR IP - SEGURANÇA
 const ALLOWED_IPS = [
     '45.181.228.226/32',   // IP autorizado do usuário
+    '127.0.0.1',           // Localhost IPv4
+    '::1',                 // Localhost IPv6
+    '::ffff:127.0.0.1',    // IPv4 mapped IPv6
 ];
 
 // Middleware de controle de IP
